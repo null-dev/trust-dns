@@ -25,6 +25,8 @@ use proto::rr::domain::usage::{
 };
 use proto::rr::{DNSClass, Name, RData, Record, RecordType};
 use proto::xfer::{DnsHandle, DnsRequestOptions, DnsResponse, FirstAnswer};
+use trust_dns_proto::rr::rdata::SOA;
+use trust_dns_proto::rr::resource::{TypedRecord, TypedRecordRef};
 
 use crate::dns_lru::DnsLru;
 use crate::dns_lru::{self, TtlConfig};
@@ -268,7 +270,7 @@ where
         is_dnssec: bool,
         valid_nsec: bool,
         query: Query,
-        soa: Option<Record>,
+        soa: Option<TypedRecord<SOA>>,
         negative_ttl: Option<u32>,
         response_code: ResponseCode,
         trusted: bool,
@@ -309,7 +311,7 @@ where
         const INITIAL_TTL: u32 = dns_lru::MAX_TTL;
 
         // need to capture these before the subsequent and destructive record processing
-        let soa = response.soa().cloned();
+        let soa = response.soa().as_ref().map(TypedRecordRef::to_owned);
         let negative_ttl = response.negative_ttl();
         let response_code = response.response_code();
 

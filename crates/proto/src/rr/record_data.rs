@@ -32,6 +32,15 @@ use crate::serialize::binary::*;
 #[cfg(feature = "dnssec")]
 use super::dnssec::rdata::DNSSECRData;
 
+/// RecordData that is stored in a DNS Record.
+pub trait RecordData: Clone + Sized + PartialEq + Eq + fmt::Display {
+    /// Attempts to convert to this RecordData from the RData type, if it is not the correct type the original is returned
+    fn try_from_rdata(data: RData) -> Result<Self, RData>;
+
+    /// Attempts to borrow this RecordData from the RData type, if it is not the correct type the original is returned
+    fn try_borrow(data: &RData) -> Result<&Self, &RData>;
+}
+
 /// Record data enum variants
 ///
 /// [RFC 1035](https://tools.ietf.org/html/rfc1035), DOMAIN NAMES - IMPLEMENTATION AND SPECIFICATION, November 1987
@@ -993,6 +1002,16 @@ impl RData {
     /// Returns true if
     pub fn is_soa(&self) -> bool {
         matches!(self, RData::SOA(..))
+    }
+}
+
+impl RecordData for RData {
+    fn try_from_rdata(data: RData) -> Result<Self, RData> {
+        Ok(data)
+    }
+
+    fn try_borrow(data: &RData) -> Result<&Self, &RData> {
+        Ok(data)
     }
 }
 

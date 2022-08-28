@@ -12,7 +12,8 @@ use std::{fmt, io, sync};
 
 use thiserror::Error;
 use tracing::debug;
-use trust_dns_proto::rr::Record;
+use trust_dns_proto::rr::rdata::SOA;
+use trust_dns_proto::rr::resource::{TypedRecord, TypedRecordRef};
 
 use crate::proto::error::{ProtoError, ProtoErrorKind};
 use crate::proto::op::{Query, ResponseCode};
@@ -47,7 +48,7 @@ pub enum ResolveErrorKind {
         /// The query for which no records were found.
         query: Box<Query>,
         /// If an SOA is present, then this is an authoritative response or a referral to another nameserver, see the negative_type field.
-        soa: Option<Box<Record>>,
+        soa: Option<Box<TypedRecord<SOA>>>,
         /// negative ttl, as determined from DnsResponse::negative_ttl
         ///  this will only be present if the SOA was also present.
         negative_ttl: Option<u32>,
@@ -111,7 +112,7 @@ pub struct ResolveError {
 impl ResolveError {
     pub(crate) fn nx_error(
         query: Query,
-        soa: Option<Record>,
+        soa: Option<TypedRecord<SOA>>,
         negative_ttl: Option<u32>,
         response_code: ResponseCode,
         trusted: bool,
@@ -167,7 +168,7 @@ impl ResolveError {
             | response_code @ ResponseCode::BADTRUNC
             | response_code @ ResponseCode::BADCOOKIE => {
                 let mut response = response;
-                let soa = response.soa().cloned();
+                let soa = response.soa().as_ref().map(TypedRecordRef::to_owned);
                 let query = response.take_queries().drain(..).next().unwrap_or_default();
                 let error_kind = ResolveErrorKind::NoRecordsFound {
                     query: Box::new(query),
@@ -188,7 +189,7 @@ impl ResolveError {
                 // let valid_until = if response.is_authoritative() { now + response.get_negative_ttl() };
 
                 let mut response = response;
-                let soa = response.soa().cloned();
+                let soa = response.soa().as_ref().map(TypedRecordRef::to_owned);
                 let negative_ttl = response.negative_ttl();
                 let trusted = if response_code == ResponseCode::NoError { false } else { trust_nx };
                 let query = response.take_queries().drain(..).next().unwrap_or_default();
