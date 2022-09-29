@@ -39,6 +39,13 @@ pub trait RecordData: Clone + Sized + PartialEq + Eq + fmt::Display {
 
     /// Attempts to borrow this RecordData from the RData type, if it is not the correct type the original is returned
     fn try_borrow(data: &RData) -> Result<&Self, &RData>;
+
+    // FIXME: make a new AnyRecordType trait
+    /// Get the associated RecordType for the RData
+    fn record_type(&self) -> RecordType;
+
+    /// Converts this RecordData into generic RData
+    fn into_rdata(self) -> RData;
 }
 
 /// Record data enum variants
@@ -1012,6 +1019,14 @@ impl RecordData for RData {
 
     fn try_borrow(data: &RData) -> Result<&Self, &RData> {
         Ok(data)
+    }
+
+    fn record_type(&self) -> RecordType {
+        self.to_record_type()
+    }
+
+    fn into_rdata(self) -> RData {
+        self
     }
 }
 

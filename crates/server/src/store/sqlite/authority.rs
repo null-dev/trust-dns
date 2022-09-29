@@ -166,7 +166,7 @@ impl SqliteAuthority {
             // AXFR is special, it is used to mark the dump of a full zone.
             //  when recovering, if an AXFR is encountered, we should remove all the records in the
             //  authority.
-            if record.rr_type() == RecordType::AXFR {
+            if record.record_type() == RecordType::AXFR {
                 self.in_memory.clear();
             } else if let Err(error) = self.update_records(&[record], false).await {
                 return Err(PersistenceErrorKind::Recovery(error.to_str()).into());
@@ -326,7 +326,7 @@ impl SqliteAuthority {
             match require.dns_class() {
                 DNSClass::ANY => {
                     if let None | Some(RData::NULL(..)) = require.data() {
-                        match require.rr_type() {
+                        match require.record_type() {
                             // ANY      ANY      empty    Name is in use
                             RecordType::ANY => {
                                 if self
@@ -364,7 +364,7 @@ impl SqliteAuthority {
                 }
                 DNSClass::NONE => {
                     if let None | Some(RData::NULL(..)) = require.data() {
-                        match require.rr_type() {
+                        match require.record_type() {
                             // NONE     ANY      empty    Name is not in use
                             RecordType::ANY => {
                                 if !self
@@ -404,7 +404,11 @@ impl SqliteAuthority {
                 // zone     rrset    rr       RRset exists (value dependent)
                 {
                     if !self
-                        .lookup(&required_name, require.rr_type(), LookupOptions::default())
+                        .lookup(
+                            &required_name,
+                            require.record_type(),
+                            LookupOptions::default(),
+                        )
                         .await
                         .unwrap_or_default()
                         .iter()
@@ -587,7 +591,7 @@ impl SqliteAuthority {
 
             let class: DNSClass = rr.dns_class();
             if class == self.in_memory.class() {
-                match rr.rr_type() {
+                match rr.record_type() {
                     RecordType::ANY | RecordType::AXFR | RecordType::IXFR => {
                         return Err(ResponseCode::FormErr);
                     }
@@ -604,7 +608,7 @@ impl SqliteAuthority {
                         } else {
                             return Err(ResponseCode::FormErr);
                         }
-                        match rr.rr_type() {
+                        match rr.record_type() {
                             RecordType::AXFR | RecordType::IXFR => {
                                 return Err(ResponseCode::FormErr);
                             }
@@ -615,7 +619,7 @@ impl SqliteAuthority {
                         if rr.ttl() != 0 {
                             return Err(ResponseCode::FormErr);
                         }
-                        match rr.rr_type() {
+                        match rr.record_type() {
                             RecordType::ANY | RecordType::AXFR | RecordType::IXFR => {
                                 return Err(ResponseCode::FormErr);
                             }
@@ -709,7 +713,7 @@ impl SqliteAuthority {
         //      return (NOERROR)
         for rr in records {
             let rr_name = LowerName::from(rr.name());
-            let rr_key = RrKey::new(rr_name.clone(), rr.rr_type());
+            let rr_key = RrKey::new(rr_name.clone(), rr.record_type());
 
             match rr.dns_class() {
                 class if class == self.in_memory.class() => {
@@ -730,7 +734,7 @@ impl SqliteAuthority {
                 }
                 DNSClass::ANY => {
                     // This is a delete of entire RRSETs, either many or one. In either case, the spec is clear:
-                    match rr.rr_type() {
+                    match rr.record_type() {
                         t @ RecordType::SOA | t @ RecordType::NS if rr_name == *self.origin() => {
                             // SOA and NS records are not to be deleted if they are the origin records
                             info!("skipping delete of {:?} see RFC 2136 - 3.4.2.3", t);

@@ -122,7 +122,7 @@ where
 
     let record = &response.answers()[0];
     assert_eq!(record.name(), &name);
-    assert_eq!(record.rr_type(), RecordType::A);
+    assert_eq!(record.record_type(), RecordType::A);
     assert_eq!(record.dns_class(), DNSClass::IN);
 
     if let RData::A(ref address) = *record.data().unwrap() {
@@ -172,7 +172,7 @@ where
 
     let record = &response.answers()[0];
     assert_eq!(record.name(), &name);
-    assert_eq!(record.rr_type(), RecordType::A);
+    assert_eq!(record.record_type(), RecordType::A);
     assert_eq!(record.dns_class(), DNSClass::IN);
     assert!(response.extensions().is_some());
     assert_eq!(
@@ -241,7 +241,7 @@ where
 
     let record = &response.answers()[0];
     assert_eq!(record.name(), &name);
-    assert_eq!(record.rr_type(), RecordType::A);
+    assert_eq!(record.record_type(), RecordType::A);
     assert_eq!(record.dns_class(), DNSClass::IN);
 
     if let RData::A(ref address) = *record.data().unwrap() {
@@ -504,7 +504,7 @@ fn test_create() {
         .expect("create failed");
     assert_eq!(result.response_code(), ResponseCode::NoError);
     let result = client
-        .query(record.name(), record.dns_class(), record.rr_type())
+        .query(record.name(), record.dns_class(), record.record_type())
         .expect("query failed");
     assert_eq!(result.response_code(), ResponseCode::NoError);
     assert_eq!(result.answers().len(), 1);
@@ -553,7 +553,7 @@ fn test_append() {
 
     // verify record contents
     let result = client
-        .query(record.name(), record.dns_class(), record.rr_type())
+        .query(record.name(), record.dns_class(), record.record_type())
         .expect("query failed");
     assert_eq!(result.response_code(), ResponseCode::NoError);
     assert_eq!(result.answers().len(), 1);
@@ -569,7 +569,7 @@ fn test_append() {
     assert_eq!(result.response_code(), ResponseCode::NoError);
 
     let result = client
-        .query(record.name(), record.dns_class(), record.rr_type())
+        .query(record.name(), record.dns_class(), record.record_type())
         .expect("query failed");
     assert_eq!(result.response_code(), ResponseCode::NoError);
     assert_eq!(result.answers().len(), 2);
@@ -598,7 +598,7 @@ fn test_append() {
     assert_eq!(result.response_code(), ResponseCode::NoError);
 
     let result = client
-        .query(record.name(), record.dns_class(), record.rr_type())
+        .query(record.name(), record.dns_class(), record.record_type())
         .expect("query failed");
     assert_eq!(result.response_code(), ResponseCode::NoError);
     assert_eq!(result.answers().len(), 2);
@@ -633,7 +633,7 @@ fn test_compare_and_swap() {
     assert_eq!(result.response_code(), ResponseCode::NoError);
 
     let result = client
-        .query(new.name(), new.dns_class(), new.rr_type())
+        .query(new.name(), new.dns_class(), new.record_type())
         .expect("query failed");
     assert_eq!(result.response_code(), ResponseCode::NoError);
     assert_eq!(result.answers().len(), 1);
@@ -656,7 +656,7 @@ fn test_compare_and_swap() {
     assert_eq!(result.response_code(), ResponseCode::NXRRSet);
 
     let result = client
-        .query(new.name(), new.dns_class(), new.rr_type())
+        .query(new.name(), new.dns_class(), new.record_type())
         .expect("query failed");
     assert_eq!(result.response_code(), ResponseCode::NoError);
     assert_eq!(result.answers().len(), 1);
@@ -710,7 +710,7 @@ fn test_delete_by_rdata() {
     assert_eq!(result.response_code(), ResponseCode::NoError);
 
     let result = client
-        .query(record.name(), record.dns_class(), record.rr_type())
+        .query(record.name(), record.dns_class(), record.record_type())
         .expect("query failed");
     assert_eq!(result.response_code(), ResponseCode::NoError);
     assert_eq!(result.answers().len(), 1);
@@ -764,7 +764,7 @@ fn test_delete_rrset() {
     assert_eq!(result.response_code(), ResponseCode::NoError);
 
     let result = client
-        .query(record.name(), record.dns_class(), record.rr_type())
+        .query(record.name(), record.dns_class(), record.record_type())
         .expect("query failed");
     assert_eq!(result.response_code(), ResponseCode::NXDomain);
     assert_eq!(result.answers().len(), 0);

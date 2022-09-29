@@ -26,7 +26,7 @@ use proto::rr::domain::usage::{
 use proto::rr::{DNSClass, Name, RData, Record, RecordType};
 use proto::xfer::{DnsHandle, DnsRequestOptions, DnsResponse, FirstAnswer};
 use trust_dns_proto::rr::rdata::SOA;
-use trust_dns_proto::rr::resource::{TypedRecord, TypedRecordRef};
+use trust_dns_proto::rr::resource::RecordRef;
 
 use crate::dns_lru::DnsLru;
 use crate::dns_lru::{self, TtlConfig};
@@ -270,7 +270,7 @@ where
         is_dnssec: bool,
         valid_nsec: bool,
         query: Query,
-        soa: Option<TypedRecord<SOA>>,
+        soa: Option<Record<SOA>>,
         negative_ttl: Option<u32>,
         response_code: ResponseCode,
         trusted: bool,
@@ -311,7 +311,7 @@ where
         const INITIAL_TTL: u32 = dns_lru::MAX_TTL;
 
         // need to capture these before the subsequent and destructive record processing
-        let soa = response.soa().as_ref().map(TypedRecordRef::to_owned);
+        let soa = response.soa().as_ref().map(RecordRef::to_owned);
         let negative_ttl = response.negative_ttl();
         let response_code = response.response_code();
 
@@ -338,7 +338,7 @@ where
                                 Some(RData::CNAME(ref cname)) => {
                                     // take the minimum TTL of the cname_ttl and the next record in the chain
                                     let ttl = cname_ttl.min(r.ttl());
-                                    debug_assert_eq!(r.rr_type(), RecordType::CNAME);
+                                    debug_assert_eq!(r.record_type(), RecordType::CNAME);
                                     if search_name.as_ref() == r.name() {
                                         return (Cow::Owned(cname.clone()), ttl, true);
                                     }
@@ -346,7 +346,7 @@ where
                                 Some(RData::SRV(ref srv)) => {
                                     // take the minimum TTL of the cname_ttl and the next record in the chain
                                     let ttl = cname_ttl.min(r.ttl());
-                                    debug_assert_eq!(r.rr_type(), RecordType::SRV);
+                                    debug_assert_eq!(r.record_type(), RecordType::SRV);
 
                                     // the search name becomes the srv.target
                                     return (Cow::Owned(srv.target().clone()), ttl, true);
@@ -382,7 +382,7 @@ where
                     if query.query_class() == r.dns_class() {
                         // standard evaluation, it's an any type or it's the requested type and the search_name matches
                         #[allow(clippy::suspicious_operation_groupings)]
-                        if (query.query_type().is_any() || query.query_type() == r.rr_type())
+                        if (query.query_type().is_any() || query.query_type() == r.record_type())
                             && (search_name.as_ref() == r.name() || query.name() == r.name())
                         {
                             found_name = true;
@@ -390,7 +390,7 @@ where
                         }
                         // CNAME evaluation, it's an A/AAAA lookup and the record is from the CNAME lookup chain.
                         if client.preserve_intermediates
-                            && r.rr_type() == RecordType::CNAME
+                            && r.record_type() == RecordType::CNAME
                             && (query.query_type() == RecordType::A
                                 || query.query_type() == RecordType::AAAA)
                         {
@@ -399,12 +399,12 @@ where
                         // srv evaluation, it's an srv lookup and the srv_search_name/target matches this name
                         //    and it's an IP
                         if query.query_type().is_srv()
-                            && r.rr_type().is_ip_addr()
+                            && r.record_type().is_ip_addr()
                             && search_name.as_ref() == r.name()
                         {
                             found_name = true;
                             Some((r, ttl))
-                        } else if query.query_type().is_ns() && r.rr_type().is_ip_addr() {
+                        } else if query.query_type().is_ns() && r.record_type().is_ip_addr() {
                             Some((r, ttl))
                         } else {
                             None
