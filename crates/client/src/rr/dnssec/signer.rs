@@ -20,7 +20,7 @@ use {
     crate::proto::rr::dnssec::{tbs, TBS},
     crate::rr::dnssec::{Algorithm, KeyPair, Private},
     crate::rr::rdata::{DNSSECRData, DNSKEY, KEY, SIG},
-    crate::rr::{DNSClass, Name, RData, RecordType},
+    crate::rr::{DNSClass, Name, RData, RecordData, RecordType},
     crate::serialize::binary::BinEncoder,
 };
 
