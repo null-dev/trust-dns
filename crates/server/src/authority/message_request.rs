@@ -300,7 +300,7 @@ impl Queries {
 
 /// A query with the original bytes stored from the query
 #[derive(Debug, PartialEq)]
-pub(crate) struct WireQuery {
+pub struct WireQuery {
     query: LowerQuery,
     original: Box<[u8]>,
 }
