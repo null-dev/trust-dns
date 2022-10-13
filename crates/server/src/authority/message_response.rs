@@ -33,14 +33,14 @@ where
     Soa: Iterator<Item = &'a Record> + Send + 'a,
     Additionals: Iterator<Item = &'a Record> + Send + 'a,
 {
-    header: Header,
-    query: Option<&'q WireQuery>,
+    pub header: Header,
+    pub query: Option<&'q WireQuery>,
     pub answers: Answers,
-    name_servers: NameServers,
-    soa: Soa,
+    pub name_servers: NameServers,
+    pub soa: Soa,
     pub additionals: Additionals,
-    sig0: Vec<Record>,
-    edns: Option<Edns>,
+    pub sig0: Vec<Record>,
+    pub edns: Option<Edns>,
 }
 
 enum EmptyOrQueries<'q> {
