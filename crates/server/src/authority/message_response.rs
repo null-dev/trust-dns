@@ -35,10 +35,10 @@ where
 {
     header: Header,
     query: Option<&'q WireQuery>,
-    answers: Answers,
+    pub answers: Answers,
     name_servers: NameServers,
     soa: Soa,
-    additionals: Additionals,
+    pub additionals: Additionals,
     sig0: Vec<Record>,
     edns: Option<Edns>,
 }
